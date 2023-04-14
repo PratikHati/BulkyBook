@@ -5,6 +5,7 @@ namespace BulkyBook.Data
 {
     public class ApplicationDBContext : DbContext
     {
+        internal object categories;
 
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {

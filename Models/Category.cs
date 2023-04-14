@@ -11,7 +11,7 @@ namespace BulkyBook.Models
 
         
         [Required]
-        [MaxLength(30)]
+        [MaxLength(30,ErrorMessage ="Max length can be 30")]
         [DisplayName("Category Name")]
         public string Name { get; set; }
         
