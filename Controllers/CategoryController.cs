@@ -1,5 +1,5 @@
-﻿using BulkyBook.Data;
-using BulkyBook.Models;
+﻿using Bulky.Models;
+using Bulky.DataAccess.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BulkyBook.Controllers
@@ -105,6 +105,13 @@ namespace BulkyBook.Controllers
             }
 
             Category? obj = _db.Categories.Find(id);
+
+            if(obj == null)
+            {
+                TempData["error"] = "Category can not be deleted";
+                return RedirectToAction("Index");
+            }
+
             _db.Categories.Remove(obj);
             _db.SaveChanges();
             TempData["success"] = "Category successfully deleted";
