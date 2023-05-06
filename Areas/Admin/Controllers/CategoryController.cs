@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Bulky.DataAccess.Repository.IRepository;
 using Bulky.DataAccess.Repository;
 
-namespace BulkyBook.Controllers
+namespace BulkyBook.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class CategoryController : Controller
     {
         private readonly IUnitofWork _unitWork;
@@ -26,9 +27,9 @@ namespace BulkyBook.Controllers
         [HttpPost]
         public IActionResult Create(Category obj)
         {
-            if(obj.Name == obj.DisplayOrder.ToString())
+            if (obj.Name == obj.DisplayOrder.ToString())
             {
-                ModelState.AddModelError("Name","Name and display order can't be same");
+                ModelState.AddModelError("Name", "Name and display order can't be same");
             }
             if (ModelState.IsValid)
             {
@@ -53,7 +54,7 @@ namespace BulkyBook.Controllers
                 return NotFound();
             }
 
-            Category? obj = _unitWork.CategoryRepository.Get(x=>x.Id == id);
+            Category? obj = _unitWork.CategoryRepository.Get(x => x.Id == id);
 
             if (obj == null)
             {
@@ -65,7 +66,7 @@ namespace BulkyBook.Controllers
         [HttpPost]
         public IActionResult Edit(Category obj)
         {
-            
+
             if (ModelState.IsValid)
             {
                 _unitWork.CategoryRepository.Update(obj);
@@ -100,7 +101,7 @@ namespace BulkyBook.Controllers
         [HttpPost, ActionName("Delete")]
         public IActionResult DeletePOST(int? id)
         {
-            if(id == null || id == 0)
+            if (id == null || id == 0)
             {
                 TempData["error"] = "Category can not be deleted";
                 return NotFound();
@@ -108,7 +109,7 @@ namespace BulkyBook.Controllers
 
             Category? obj = _unitWork.CategoryRepository.Get(x => x.Id == id);
 
-            if(obj == null)
+            if (obj == null)
             {
                 TempData["error"] = "Category can not be deleted";
                 return RedirectToAction("Index");
