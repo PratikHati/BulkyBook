@@ -12,9 +12,11 @@ namespace BulkyBook.Areas.Admin.Controllers
     public class ProductController : Controller
     {
         private readonly IUnitofWork _unitWork;
-        public ProductController(IUnitofWork unitWork)
+        private readonly IWebHostEnvironment _webHostEnvironment;                       //to get root path of this application
+        public ProductController(IUnitofWork unitWork, IWebHostEnvironment webHostEnvironment)
         {
             _unitWork = unitWork;
+            _webHostEnvironment = webHostEnvironment;
         }
         public IActionResult Index()
         {
@@ -23,7 +25,7 @@ namespace BulkyBook.Areas.Admin.Controllers
             return View(products);
         }
         [HttpGet]
-        public IActionResult Create()
+        public IActionResult Upsert(int ? id)   //create+edit
         {
 
             IEnumerable<SelectListItem> categoryList = _unitWork.CategoryRepository.GetAll().Select(x => new SelectListItem
@@ -36,87 +38,70 @@ namespace BulkyBook.Areas.Admin.Controllers
             //encapsulate both into single view models
             ProductCategory pdct = new ProductCategory()
             {
-                Product = new Product(),
+                Product = new Product(),                            //blank/null product object
                 Categories = categoryList
             };
-            return View(pdct);
+
+            if(id == 0 || id == null)
+                return View(pdct);                                  //create
+
+            else                                                    //update
+            {
+                pdct.Product = _unitWork.ProductRepository.Get(x => x.Id == id);
+                return View(pdct);
+            }
         }
         [HttpPost]
-        public IActionResult Create(ProductCategory obj)
+        public IActionResult Upsert(ProductCategory obj, IFormFile? file)    //create+edit
         {
+            try 
+            {
+                if (file != null)
+                {
+                    string wwwRoot = _webHostEnvironment.WebRootPath;               //get the root folder path
+
+                    string filename = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);     //filename
+
+                    string filepath = Path.Combine(wwwRoot, @"images\products");        //filepath to store
+
+                    using (FileStream fs = new FileStream(Path.Combine(filepath, filename), FileMode.Create))
+                    {
+                        file.CopyTo(fs);
+                    }
+
+                    obj.Product.ImageURL = @"\images\products\" + filename;
+                }
+
+
+                if (ModelState.IsValid)
+                {
+                    _unitWork.ProductRepository.Add(obj.Product);
+                    _unitWork.Save();
+                    TempData["success"] = "Product successfully added";
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    TempData["error"] = "Product can not be created";
+                    obj.Categories = _unitWork.CategoryRepository.GetAll().Select(x => new SelectListItem
+                    {
+                        Text = x.Name,
+                        Value = x.Id.ToString()
+                    });
+
+                    return View(obj);
+                }
+            }
+            catch(Exception e)
+            {
+                return View();
+            }
             
-            if (ModelState.IsValid)
-            {
-                _unitWork.ProductRepository.Add(obj.Product);
-                _unitWork.Save();
-                TempData["success"] = "Product successfully added";
-                return RedirectToAction("Index");
-            }
-            else
-            {
-                TempData["error"] = "Product can not be created";
-                obj.Categories = _unitWork.CategoryRepository.GetAll().Select(x => new SelectListItem
-                { 
-                    Text = x.Name,
-                    Value = x.Id.ToString()
-                });
 
-                return View(obj);
-            }
 
         }
 
-        [HttpGet]
-        public IActionResult Edit(int? id)
-        {
-            if (id == null || id == 0)
-            {
-                return NotFound();
-            }
-
-            Product? obj = _unitWork.ProductRepository.Get(x => x.Id == id);
-
-            if (obj == null)
-            {
-                return NotFound();
-            }
-
-            IEnumerable<SelectListItem> categoryList = _unitWork.CategoryRepository.GetAll().Select(x => new SelectListItem
-            {
-                Text = x.Name,
-                Value = x.Id.ToString()
-            });
-
-            ViewBag.categoryList = categoryList;
-            //encapsulate both into single view models
-            ProductCategory pdct = new ProductCategory()
-            {
-                Product = obj,
-                Categories = categoryList
-            };
-
-
-            return View(pdct);
-        }
-        [HttpPost]
-        public IActionResult Edit(ProductCategory obj)
-        {
-
-            if (ModelState.IsValid)
-            {
-                _unitWork.ProductRepository.Update(obj.Product);
-                _unitWork.Save();
-                TempData["success"] = "Product successfully edited";
-                return RedirectToAction("Index");
-            }
-            else
-            {
-                TempData["error"] = "Product can not be edited";
-            }
-
-            return View();
-        }
-
+       
         public IActionResult Delete(int? id)
         {
             if (id == null || id == 0)
