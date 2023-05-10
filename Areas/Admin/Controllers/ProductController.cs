@@ -20,7 +20,7 @@ namespace BulkyBook.Areas.Admin.Controllers
         }
         public IActionResult Index()
         {
-            List<Product> products = _unitWork.ProductRepository.GetAll().ToList();
+            List<Product> products = _unitWork.ProductRepository.GetAll(properties: "Category").ToList();
 
             return View(products);
         }
@@ -64,6 +64,19 @@ namespace BulkyBook.Areas.Admin.Controllers
 
                     string filepath = Path.Combine(wwwRoot, @"images\products");        //filepath to store
 
+                    if(obj.Product.ImageURL != null)                //already a file exists for this obj
+                    {
+                        //delete the file from file system
+                        string oldPath = obj.Product.ImageURL;      //\images\products\6e024256-b787-4b72-9074-07ea7dd93150.jpg
+
+                        string toDeleteFile = wwwRoot + oldPath;
+
+                        if (System.IO.File.Exists(toDeleteFile))
+                        {
+                            System.IO.File.Delete(toDeleteFile);    //delete it
+                        }
+                    }
+
                     using (FileStream fs = new FileStream(Path.Combine(filepath, filename), FileMode.Create))
                     {
                         file.CopyTo(fs);
@@ -75,7 +88,10 @@ namespace BulkyBook.Areas.Admin.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    _unitWork.ProductRepository.Add(obj.Product);
+                    if(obj.Product.Id == 0 || obj.Product.Id  == null)
+                        _unitWork.ProductRepository.Add(obj.Product);
+                    else
+                        _unitWork.ProductRepository.Update(obj.Product);
                     _unitWork.Save();
                     TempData["success"] = "Product successfully added";
                     return RedirectToAction("Index");
@@ -140,5 +156,14 @@ namespace BulkyBook.Areas.Admin.Controllers
             TempData["success"] = "Product successfully deleted";
             return RedirectToAction("Index");
         }
+
+        #region API CALL
+        public IActionResult GetAll()
+        {
+            List<Product> products = _unitWork.ProductRepository.GetAll(properties: "Category").ToList();
+
+            return Json(new { data = products});
+        }
+        #endregion
     }
 }

@@ -20,7 +20,7 @@
         </div>
 
 
-        <table class="table table-bordered table-striped">
+        <table id="myTable" class="table table-bordered table-striped" >
             <thead>
                 <tr>
                     <th>
@@ -38,44 +38,19 @@
                     <th>
                         Category
                     </th>
+                    
                 </tr>
             </thead>
-            <tbody>
-                @foreach (Product v in Model)
-                {
-                    <tr>
-                        <td>
-                            @v.Title
-                        </td>
-                        <td>
-                            @v.ISBN
-                        </td>
-                        <td>
-                            @v.Price
-                        </td>
-                        <td>
-                            @v.Author
-                        </td>
-                        <td>
-                            @v.CategoryId
-                        </td>
-                        <td>
-                            <a asp-controller="Product" asp-action="Upsert" asp-route-id="@v.Id" class="btn btn-primary mx-2">
-                                <i class="bi bi-pencil-square"></i> Edit
-                            </a>
-                            <a asp-controller="Product" asp-action="Delete" asp-route-id="@v.Id" class="btn btn-danger mx-2">
-                                <i class="bi bi-trash"></i> Delete
-                            </a>
-                        </td>
-                    </tr>
-                }
-
-            </tbody>
+            
         </table>
 
     </div>
 
 </form>
+
+@section Scripts{
+    <script src="~/js/product.js"></script>
+}
 
 
 
